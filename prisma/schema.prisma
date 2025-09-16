@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  refresh_token_expires_in Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map(name: "user_id")
+  expires      DateTime
+  sessionToken String   @unique @map(name: "session_token")
+  accessToken  String   @unique @map(name: "access_token")
+  createdAt    DateTime @default(now()) @map(name: "created_at")
+  updatedAt    DateTime @default(now()) @map(name: "updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "session_user_id")
+  @@index([expires], name: "session_expires")
+  @@map(name: "sessions")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String?  @unique
+  emailVerified DateTime? @map(name: "email_verified")
+  image         String?
+  createdAt     DateTime @default(now()) @map(name: "created_at")
+  updatedAt     DateTime @default(now()) @map(name: "updated_at")
+
+  accounts      Account[]
+  sessions      Session[]
+  jobs          Job[]     @relation("PostedJobs")
+  applications  Application[]
+
+  @@map(name: "users")
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  title       String
+  company     String
+  location    String
+  type        String
+  description String   @db.Text
+  salary      Int?
+  postedAt    DateTime @default(now()) @map(name: "posted_at")
+  postedById  String   @map(name: "posted_by_id")
+  
+  postedBy    User     @relation("PostedJobs", fields: [postedById], references: [id])
+  applications Application[]
+
+  @@index([postedById], name: "job_posted_by_id")
+  @@index([postedAt], name: "job_posted_at")
+  @@map(name: "jobs")
+}
+
+model Application {
+  id        String   @id @default(cuid())
+  userId    String   @map(name: "user_id")
+  jobId     String   @map(name: "job_id")
+  status    String   @default("PENDING")
+  appliedAt DateTime @default(now()) @map(name: "applied_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+  job       Job      @relation(fields: [jobId], references: [id])
+
+  @@unique([jobId, userId])
+  @@index([userId], name: "application_user_id")
+  @@index([jobId], name: "application_job_id")
+  @@index([status], name: "application_status")
+  @@map(name: "applications")
+}
