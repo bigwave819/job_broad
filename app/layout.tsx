@@ -25,14 +25,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <SessionProvider>
         <div className="min-h-screen bg-gray-50">
           <Navbar/>
           <main className="container mx-auto px-4 py-8">
-            <SessionProvider>
               {children}
-            </SessionProvider>
           </main>
         </div>
+        </SessionProvider>
       </body>
     </html>
   );

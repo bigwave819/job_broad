@@ -13,7 +13,7 @@ export default function Home() {
   }
   return (
     <div>
-      <p>Signed in as { session.user?.email }</p>
+      <p>Signed in as { session.user?.name }</p>
       <button onClick={() => signOut()} className="bg-blue-500 text-500">Sign out</button>
     </div>
   );
